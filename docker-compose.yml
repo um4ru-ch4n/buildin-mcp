@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  buildin-mcp:
+    build: .
+    environment:
+      - BUILDIN_BOT_TOKEN=${BUILDIN_BOT_TOKEN}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

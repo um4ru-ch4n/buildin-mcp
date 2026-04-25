@@ -1,0 +1,23 @@
+api:
+  base_url: "https://api.buildin.ai/v1"
+  timeout_ms: 30000
+
+rate_limits:
+  read_per_minute: 1000
+  write_per_minute: 100
+  batch_per_minute: 10
+
+retry:
+  max_attempts: 3
+  initial_delay_ms: 1000
+  backoff_multiplier: 2
+  max_delay_ms: 10000
+
+pagination:
+  default_page_size: 50
+  max_page_size: 100
+
+logging:
+  # In production: JSON format. In development: human-readable text.
+  # Controlled by NODE_ENV environment variable.
+  default_level: "info"
