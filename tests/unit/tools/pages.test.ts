@@ -39,7 +39,7 @@ describe('Pages tools', () => {
       await mocks.registeredTools['create_page']!({ title: 'My Page' });
 
       expect(mocks.mockClient.post).toHaveBeenCalledWith(
-        '/v1/pages',
+        '/pages',
         expect.objectContaining({
           properties: expect.objectContaining({
             title: expect.objectContaining({ type: 'title' }),
@@ -58,7 +58,7 @@ describe('Pages tools', () => {
       });
 
       expect(mocks.mockClient.post).toHaveBeenCalledWith(
-        '/v1/pages',
+        '/pages',
         expect.objectContaining({ parent: { page_id: '550e8400-e29b-41d4-a716-446655440000' } }),
         expect.anything(),
       );
@@ -91,7 +91,7 @@ describe('Pages tools', () => {
       await mocks.registeredTools['get_page']!({ page_id: '550e8400-e29b-41d4-a716-446655440000' });
 
       expect(mocks.mockClient.get).toHaveBeenCalledWith(
-        '/v1/pages/550e8400-e29b-41d4-a716-446655440000',
+        '/pages/550e8400-e29b-41d4-a716-446655440000',
         expect.anything(),
       );
     });
@@ -107,7 +107,7 @@ describe('Pages tools', () => {
       });
 
       expect(mocks.mockClient.patch).toHaveBeenCalledWith(
-        '/v1/pages/550e8400-e29b-41d4-a716-446655440000',
+        '/pages/550e8400-e29b-41d4-a716-446655440000',
         expect.objectContaining({ archived: true }),
         expect.anything(),
       );

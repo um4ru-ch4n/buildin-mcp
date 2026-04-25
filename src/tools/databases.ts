@@ -76,7 +76,7 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
         if (input.icon) body['icon'] = input.icon;
         if (input.cover) body['cover'] = input.cover;
 
-        const database = await client.post<Database>('/v1/databases', body, ctx);
+        const database = await client.post<Database>('/databases', body, ctx);
         logger.info('Database created successfully', ctx, { databaseId: database.id });
         return { content: [{ type: 'text', text: JSON.stringify(database, null, 2) }] };
       } catch (error) {
@@ -100,7 +100,7 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
       logger.info('Getting database', ctx, { databaseId: input.database_id });
 
       try {
-        const database = await client.get<Database>(`/v1/databases/${input.database_id}`, ctx);
+        const database = await client.get<Database>(`/databases/${input.database_id}`, ctx);
         logger.info('Database retrieved', ctx, { databaseId: database.id });
         return { content: [{ type: 'text', text: JSON.stringify(database, null, 2) }] };
       } catch (error) {
@@ -141,7 +141,7 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
         if (input.properties !== undefined) body['properties'] = input.properties;
         if (input.archived !== undefined) body['archived'] = input.archived;
 
-        const database = await client.patch<Database>(`/v1/databases/${input.database_id}`, body, ctx);
+        const database = await client.patch<Database>(`/databases/${input.database_id}`, body, ctx);
         logger.info('Database updated successfully', ctx, { databaseId: database.id });
         return { content: [{ type: 'text', text: JSON.stringify(database, null, 2) }] };
       } catch (error) {
@@ -177,14 +177,14 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
         if (input.after_updated_at !== undefined) body['after_updated_at'] = input.after_updated_at;
 
         const result = await client.post<PaginatedList<Page>>(
-          `/v1/databases/${input.database_id}/query`,
+          `/databases/${input.database_id}/query`,
           body,
           ctx,
         );
 
         logger.info('Database query succeeded', ctx, {
           databaseId: input.database_id,
-          count: result.results.length,
+          count: result.results?.length ?? 0,
           hasMore: result.has_more,
         });
 

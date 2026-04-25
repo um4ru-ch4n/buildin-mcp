@@ -48,7 +48,7 @@ describe('Databases tools', () => {
       });
 
       expect(mocks.mockClient.post).toHaveBeenCalledWith(
-        '/v1/databases',
+        '/databases',
         expect.objectContaining({
           parent: { type: 'page_id', page_id: PAGE_ID },
           title: [{ type: 'text', text: { content: 'My DB' } }],
@@ -73,7 +73,7 @@ describe('Databases tools', () => {
     it('calls GET /v1/databases/{id}', async () => {
       (mocks.mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({ id: DB_ID });
       await mocks.registeredTools['get_database']!({ database_id: DB_ID });
-      expect(mocks.mockClient.get).toHaveBeenCalledWith(`/v1/databases/${DB_ID}`, expect.anything());
+      expect(mocks.mockClient.get).toHaveBeenCalledWith(`/databases/${DB_ID}`, expect.anything());
     });
   });
 
@@ -84,7 +84,7 @@ describe('Databases tools', () => {
       await mocks.registeredTools['update_database']!({ database_id: DB_ID, title: 'New Title' });
 
       expect(mocks.mockClient.patch).toHaveBeenCalledWith(
-        `/v1/databases/${DB_ID}`,
+        `/databases/${DB_ID}`,
         expect.objectContaining({
           title: [{ type: 'text', text: { content: 'New Title' } }],
         }),
@@ -113,7 +113,7 @@ describe('Databases tools', () => {
       (mocks.mockClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
       await mocks.registeredTools['query_database']!({ database_id: DB_ID, page_size: 50 });
       expect(mocks.mockClient.post).toHaveBeenCalledWith(
-        `/v1/databases/${DB_ID}/query`,
+        `/databases/${DB_ID}/query`,
         expect.objectContaining({ page_size: 50 }),
         expect.anything(),
       );

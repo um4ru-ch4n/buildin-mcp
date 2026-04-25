@@ -72,7 +72,7 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
       logger.info('Getting block', ctx, { blockId: input.block_id });
 
       try {
-        const block = await client.get<Block>(`/v1/blocks/${input.block_id}`, ctx);
+        const block = await client.get<Block>(`/blocks/${input.block_id}`, ctx);
         logger.info('Block retrieved', ctx, { blockId: block.id, type: block.type });
         return { content: [{ type: 'text', text: JSON.stringify(block, null, 2) }] };
       } catch (error) {
@@ -106,13 +106,13 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
         if (input.recursive) params.set('recursive', 'true');
 
         const result = await client.get<PaginatedList<Block>>(
-          `/v1/blocks/${input.block_id}/children?${params.toString()}`,
+          `/blocks/${input.block_id}/children?${params.toString()}`,
           ctx,
         );
 
         logger.info('Block children retrieved', ctx, {
           blockId: input.block_id,
-          count: result.results.length,
+          count: result.results?.length ?? 0,
           hasMore: result.has_more,
         });
 
@@ -140,14 +140,14 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
 
       try {
         const result = await client.patch<PaginatedList<Block>>(
-          `/v1/blocks/${input.block_id}/children`,
+          `/blocks/${input.block_id}/children`,
           { children: input.children },
           ctx,
         );
 
         logger.info('Blocks appended successfully', ctx, {
           blockId: input.block_id,
-          appended: result.results.length,
+          appended: result.results?.length ?? 0,
         });
 
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
@@ -180,7 +180,7 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
         if (input.data !== undefined) body['data'] = input.data;
         if (input.archived !== undefined) body['archived'] = input.archived;
 
-        const block = await client.patch<Block>(`/v1/blocks/${input.block_id}`, body, ctx);
+        const block = await client.patch<Block>(`/blocks/${input.block_id}`, body, ctx);
         logger.info('Block updated successfully', ctx, { blockId: block.id });
         return { content: [{ type: 'text', text: JSON.stringify(block, null, 2) }] };
       } catch (error) {
@@ -205,7 +205,7 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
 
       try {
         const result = await client.delete<{ object: string; id: string; deleted: boolean }>(
-          `/v1/blocks/${input.block_id}`,
+          `/blocks/${input.block_id}`,
           ctx,
         );
 

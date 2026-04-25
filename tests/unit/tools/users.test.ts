@@ -34,7 +34,7 @@ describe('Users tool', () => {
 
     await mocks.registeredTools['get_me']!({});
 
-    expect(mocks.mockClient.get).toHaveBeenCalledWith('/v1/users/me', expect.anything());
+    expect(mocks.mockClient.get).toHaveBeenCalledWith('/users/me', expect.anything());
   });
 
   it('returns user JSON in content', async () => {

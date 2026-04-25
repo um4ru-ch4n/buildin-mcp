@@ -35,7 +35,7 @@ describe('Search tool', () => {
     await mocks.registeredTools['search']!({ query: 'hello', page_size: 10 });
 
     expect(mocks.mockClient.post).toHaveBeenCalledWith(
-      '/v1/search',
+      '/search',
       expect.objectContaining({ query: 'hello', page_size: 10 }),
       expect.anything(),
     );
@@ -47,7 +47,7 @@ describe('Search tool', () => {
     await mocks.registeredTools['search']!({ query: '', page_size: 10 });
 
     expect(mocks.mockClient.post).toHaveBeenCalledWith(
-      '/v1/search',
+      '/search',
       expect.objectContaining({ query: '' }),
       expect.anything(),
     );
@@ -59,7 +59,7 @@ describe('Search tool', () => {
     await mocks.registeredTools['search']!({ query: 'test', page_size: 10, start_cursor: 'cursor-xyz' });
 
     expect(mocks.mockClient.post).toHaveBeenCalledWith(
-      '/v1/search',
+      '/search',
       expect.objectContaining({ start_cursor: 'cursor-xyz' }),
       expect.anything(),
     );

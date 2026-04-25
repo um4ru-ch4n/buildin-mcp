@@ -37,7 +37,7 @@ describe('Blocks tools', () => {
     it('calls GET /v1/blocks/{block_id}', async () => {
       (mocks.mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({ id: BLOCK_ID });
       await mocks.registeredTools['get_block']!({ block_id: BLOCK_ID });
-      expect(mocks.mockClient.get).toHaveBeenCalledWith(`/v1/blocks/${BLOCK_ID}`, expect.anything());
+      expect(mocks.mockClient.get).toHaveBeenCalledWith(`/blocks/${BLOCK_ID}`, expect.anything());
     });
   });
 
@@ -46,7 +46,7 @@ describe('Blocks tools', () => {
       (mocks.mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
       await mocks.registeredTools['get_block_children']!({ block_id: BLOCK_ID, page_size: 50, recursive: false });
       expect(mocks.mockClient.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/v1/blocks/${BLOCK_ID}/children`),
+        expect.stringContaining(`/blocks/${BLOCK_ID}/children`),
         expect.anything(),
       );
     });
@@ -77,7 +77,7 @@ describe('Blocks tools', () => {
       const children = [{ type: 'paragraph', data: { rich_text: [{ type: 'text', text: { content: 'Hello' } }] } }];
       await mocks.registeredTools['append_block_children']!({ block_id: BLOCK_ID, children });
       expect(mocks.mockClient.patch).toHaveBeenCalledWith(
-        `/v1/blocks/${BLOCK_ID}/children`,
+        `/blocks/${BLOCK_ID}/children`,
         { children },
         expect.anything(),
       );
@@ -89,7 +89,7 @@ describe('Blocks tools', () => {
       (mocks.mockClient.patch as ReturnType<typeof vi.fn>).mockResolvedValue({ id: BLOCK_ID });
       await mocks.registeredTools['update_block']!({ block_id: BLOCK_ID, archived: true });
       expect(mocks.mockClient.patch).toHaveBeenCalledWith(
-        `/v1/blocks/${BLOCK_ID}`,
+        `/blocks/${BLOCK_ID}`,
         expect.objectContaining({ archived: true }),
         expect.anything(),
       );
@@ -100,7 +100,7 @@ describe('Blocks tools', () => {
     it('calls DELETE /v1/blocks/{id}', async () => {
       (mocks.mockClient.delete as ReturnType<typeof vi.fn>).mockResolvedValue({ deleted: true });
       await mocks.registeredTools['delete_block']!({ block_id: BLOCK_ID });
-      expect(mocks.mockClient.delete).toHaveBeenCalledWith(`/v1/blocks/${BLOCK_ID}`, expect.anything());
+      expect(mocks.mockClient.delete).toHaveBeenCalledWith(`/blocks/${BLOCK_ID}`, expect.anything());
     });
 
     it('returns isError: true on failure', async () => {

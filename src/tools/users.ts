@@ -16,7 +16,7 @@ export function registerUsersTools(server: McpServer, client: BuildinClient): vo
       logger.info('Getting current user info', ctx);
 
       try {
-        const user = await client.get<User>('/v1/users/me', ctx);
+        const user = await client.get<User>('/users/me', ctx);
         logger.info('User info retrieved', ctx, { userId: user.id });
         return { content: [{ type: 'text', text: JSON.stringify(user, null, 2) }] };
       } catch (error) {

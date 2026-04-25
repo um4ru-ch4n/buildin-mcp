@@ -26,11 +26,11 @@ export function registerSearchTools(server: McpServer, client: BuildinClient): v
         };
         if (input.start_cursor) body['start_cursor'] = input.start_cursor;
 
-        const result = await client.post<PaginatedList<Page>>('/v1/search', body, ctx);
+        const result = await client.post<PaginatedList<Page>>('/search', body, ctx);
 
         logger.info('Search completed', ctx, {
           query: input.query,
-          resultCount: result.results.length,
+          resultCount: result.results?.length ?? 0,
           hasMore: result.has_more,
         });
 

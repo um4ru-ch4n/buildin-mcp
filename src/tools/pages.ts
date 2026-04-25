@@ -69,7 +69,7 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
         if (input.icon) body['icon'] = input.icon;
         if (input.cover) body['cover'] = input.cover;
 
-        const page = await client.post<Page>('/v1/pages', body, ctx);
+        const page = await client.post<Page>('/pages', body, ctx);
         logger.info('Page created successfully', ctx, { pageId: page.id });
         return { content: [{ type: 'text', text: JSON.stringify(page, null, 2) }] };
       } catch (error) {
@@ -93,7 +93,7 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
       logger.info('Getting page', ctx, { pageId: input.page_id });
 
       try {
-        const page = await client.get<Page>(`/v1/pages/${input.page_id}`, ctx);
+        const page = await client.get<Page>(`/pages/${input.page_id}`, ctx);
         logger.info('Page retrieved successfully', ctx, { pageId: page.id });
         return { content: [{ type: 'text', text: JSON.stringify(page, null, 2) }] };
       } catch (error) {
@@ -137,7 +137,7 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
         if (input.cover !== undefined) body['cover'] = input.cover;
         if (input.archived !== undefined) body['archived'] = input.archived;
 
-        const page = await client.patch<Page>(`/v1/pages/${input.page_id}`, body, ctx);
+        const page = await client.patch<Page>(`/pages/${input.page_id}`, body, ctx);
         logger.info('Page updated successfully', ctx, { pageId: page.id });
         return { content: [{ type: 'text', text: JSON.stringify(page, null, 2) }] };
       } catch (error) {
