@@ -12,7 +12,7 @@ export function registerSearchTools(server: McpServer, client: BuildinClient): v
     {
       query: z.string().default('').describe('Search keywords. Leave empty to list all accessible pages.'),
       start_cursor: z.string().optional().describe('Pagination cursor from a previous response'),
-      page_size: z.number().int().min(1).max(100).default(10).describe('Number of results per page (max 100)'),
+      page_size: z.coerce.number().int().min(1).max(100).default(10).describe('Number of results per page (max 100)'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();

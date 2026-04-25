@@ -5,45 +5,15 @@ import { logger, generateCorrelationId } from '../utils/logger.js';
 import type { ToolContext } from '../types/tools.js';
 import type { Database, PaginatedList, Page } from '../types/api.js';
 
-const RichTextTitleSchema = z.array(z.object({
-  type: z.literal('text').default('text'),
-  text: z.object({ content: z.string() }),
-}));
-
-const SelectOptionSchema = z.object({
-  id: z.string().optional(),
-  name: z.string(),
-  color: z.string().optional(),
-});
-
-const DatabasePropertySchema = z.union([
-  z.object({ name: z.string(), type: z.literal('title') }),
-  z.object({ name: z.string(), type: z.literal('rich_text') }),
-  z.object({ name: z.string(), type: z.literal('number'), number: z.object({ format: z.string().optional() }).optional() }),
-  z.object({ name: z.string(), type: z.literal('select'), select: z.object({ options: z.array(SelectOptionSchema).optional() }).optional() }),
-  z.object({ name: z.string(), type: z.literal('multi_select'), multi_select: z.object({ options: z.array(SelectOptionSchema).optional() }).optional() }),
-  z.object({ name: z.string(), type: z.literal('date') }),
-  z.object({ name: z.string(), type: z.literal('people') }),
-  z.object({ name: z.string(), type: z.literal('files') }),
-  z.object({ name: z.string(), type: z.literal('checkbox') }),
-  z.object({ name: z.string(), type: z.literal('url') }),
-  z.object({ name: z.string(), type: z.literal('email') }),
-  z.object({ name: z.string(), type: z.literal('phone_number') }),
-  z.object({ name: z.string(), type: z.literal('relation'), relation: z.object({ database_id: z.string() }).optional() }),
-  z.object({ name: z.string(), type: z.literal('created_time') }),
-  z.object({ name: z.string(), type: z.literal('created_by') }),
-  z.object({ name: z.string(), type: z.literal('last_edited_time') }),
-  z.object({ name: z.string(), type: z.literal('last_edited_by') }),
-]);
-
-const IconSchema = z.union([
-  z.object({ emoji: z.string() }),
-  z.object({ external: z.object({ url: z.string().url() }) }),
-]);
+// Relaxed schemas to avoid MCP SDK serialization issues with strict unions
+const IconSchema = z.object({
+  emoji: z.string().optional(),
+  external: z.object({ url: z.string() }).optional(),
+}).passthrough();
 
 const CoverSchema = z.object({
-  external: z.object({ url: z.string().url() }),
-});
+  external: z.object({ url: z.string() }).optional(),
+}).passthrough();
 
 export function registerDatabasesTools(server: McpServer, client: BuildinClient): void {
   // create_database
@@ -51,13 +21,13 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     'create_database',
     'Create a new database (multi-dimensional table) in Buildin.ai within a parent page.',
     {
-      parent_page_id: z.string().uuid().describe('ID of the parent page where the database will be created'),
+      parent_page_id: z.string().describe('ID of the parent page where the database will be created'),
       title: z.string().min(1).max(100).describe('Database title'),
-      properties: z.record(z.string(), DatabasePropertySchema).describe(
-        'Database schema: map of property name → property config. Must include at least a "title" type property.',
+      properties: z.record(z.string(), z.any()).describe(
+        'Database schema: map of property_key → { name, type, ... }. Must include at least one "title" type. Example: { "name": { "name": "Task", "type": "title" }, "status": { "name": "Status", "type": "select", "select": { "options": [{ "name": "Done", "color": "green" }] } } }',
       ),
-      icon: IconSchema.optional().describe('Database icon'),
-      cover: CoverSchema.optional().describe('Database cover image'),
+      icon: IconSchema.optional().describe('Database icon: { emoji: "📋" }'),
+      cover: CoverSchema.optional().describe('Database cover: { external: { url: "..." } }'),
       is_inline: z.boolean().default(false).describe('Whether to create as an inline database'),
     },
     async (input) => {
@@ -92,7 +62,7 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     'get_database',
     'Retrieve a Buildin.ai database schema by its ID. Returns database properties, title, icon, and metadata.',
     {
-      database_id: z.string().uuid().describe('The ID of the database to retrieve'),
+      database_id: z.string().describe('The ID of the database to retrieve'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -116,12 +86,12 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     'update_database',
     'Update a Buildin.ai database: title, icon, cover, properties schema, or archive status. Set a property to null to delete it.',
     {
-      database_id: z.string().uuid().describe('The ID of the database to update'),
+      database_id: z.string().describe('The ID of the database to update'),
       title: z.string().min(1).max(100).optional().describe('New database title'),
       icon: IconSchema.nullable().optional().describe('New icon (null to remove)'),
       cover: CoverSchema.nullable().optional().describe('New cover (null to remove)'),
-      properties: z.record(z.string(), DatabasePropertySchema.nullable()).optional().describe(
-        'Properties to add/update. Set a property to null to delete it.',
+      properties: z.record(z.string(), z.any()).optional().describe(
+        'Properties to add/update. Set a property value to null to delete it.',
       ),
       archived: z.boolean().optional().describe('Archive or unarchive the database'),
     },
@@ -157,11 +127,11 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     'query_database',
     'Query records (pages) in a Buildin.ai database. Supports pagination and time-based filtering.',
     {
-      database_id: z.string().uuid().describe('The ID of the database to query'),
+      database_id: z.string().describe('The ID of the database to query'),
       start_cursor: z.string().optional().describe('Pagination cursor from a previous response'),
-      page_size: z.number().int().min(1).max(100).default(50).describe('Number of records per page (max 100)'),
-      after_created_at: z.number().int().optional().describe('Return only records created after this Unix timestamp (ms)'),
-      after_updated_at: z.number().int().optional().describe('Return only records updated after this Unix timestamp (ms)'),
+      page_size: z.coerce.number().int().min(1).max(100).default(50).describe('Number of records per page (max 100)'),
+      after_created_at: z.coerce.number().int().optional().describe('Return only records created after this Unix timestamp (ms)'),
+      after_updated_at: z.coerce.number().int().optional().describe('Return only records updated after this Unix timestamp (ms)'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();

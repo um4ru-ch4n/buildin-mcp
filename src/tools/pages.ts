@@ -5,37 +5,20 @@ import { logger, generateCorrelationId } from '../utils/logger.js';
 import type { ToolContext } from '../types/tools.js';
 import type { Page } from '../types/api.js';
 
-const RichTextItemSchema = z.object({
-  type: z.enum(['text', 'mention', 'equation']).default('text'),
-  text: z.object({
-    content: z.string().max(2000),
-    link: z.object({ url: z.string().url() }).nullable().optional(),
-  }).optional(),
-  annotations: z.object({
-    bold: z.boolean().optional(),
-    italic: z.boolean().optional(),
-    strikethrough: z.boolean().optional(),
-    underline: z.boolean().optional(),
-    code: z.boolean().optional(),
-    color: z.string().optional(),
-  }).optional(),
-});
-
-const IconSchema = z.union([
-  z.object({ emoji: z.string() }),
-  z.object({ external: z.object({ url: z.string().url() }) }),
-]);
+// Relaxed schemas — passthrough to avoid MCP SDK serialization issues with strict unions
+const IconSchema = z.object({
+  emoji: z.string().optional(),
+  external: z.object({ url: z.string() }).optional(),
+}).passthrough();
 
 const CoverSchema = z.object({
-  external: z.object({ url: z.string().url() }),
-});
+  external: z.object({ url: z.string() }).optional(),
+}).passthrough();
 
-const ParentSchema = z.union([
-  z.object({ page_id: z.string().uuid() }),
-  z.object({ database_id: z.string().uuid() }),
-]);
-
-const PropertiesSchema = z.record(z.string(), z.unknown());
+const ParentSchema = z.object({
+  page_id: z.string().optional(),
+  database_id: z.string().optional(),
+}).passthrough();
 
 export function registerPagesTools(server: McpServer, client: BuildinClient): void {
   // create_page
@@ -43,11 +26,11 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
     'create_page',
     'Create a new page in Buildin.ai. Can be created as a child of another page or as a record in a database.',
     {
-      parent: ParentSchema.optional().describe('Parent page or database. If omitted, created in default location.'),
+      parent: ParentSchema.optional().describe('Parent: { page_id: "..." } or { database_id: "..." }. Omit for default location.'),
       title: z.string().min(1).max(2000).describe('Page title'),
-      icon: IconSchema.optional().describe('Page icon: emoji or external URL'),
-      cover: CoverSchema.optional().describe('Page cover image URL'),
-      properties: PropertiesSchema.optional().describe('Additional page properties (for database records)'),
+      icon: IconSchema.optional().describe('Page icon: { emoji: "🧪" } or { external: { url: "..." } }'),
+      cover: CoverSchema.optional().describe('Page cover: { external: { url: "..." } }'),
+      properties: z.record(z.string(), z.any()).optional().describe('Additional page properties (for database records). E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -85,7 +68,7 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
     'get_page',
     'Retrieve a Buildin.ai page by its ID. Returns page metadata, properties, icon, cover, and parent info.',
     {
-      page_id: z.string().uuid().describe('The ID of the page to retrieve'),
+      page_id: z.string().describe('The ID of the page to retrieve'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -109,12 +92,12 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
     'update_page',
     'Update a Buildin.ai page properties, icon, cover, or archive status.',
     {
-      page_id: z.string().uuid().describe('The ID of the page to update'),
+      page_id: z.string().describe('The ID of the page to update'),
       title: z.string().min(1).max(2000).optional().describe('New page title'),
       icon: IconSchema.nullable().optional().describe('New page icon (null to remove)'),
       cover: CoverSchema.nullable().optional().describe('New page cover (null to remove)'),
       archived: z.boolean().optional().describe('Archive or unarchive the page'),
-      properties: PropertiesSchema.optional().describe('Properties to update'),
+      properties: z.record(z.string(), z.any()).optional().describe('Properties to update. E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
