@@ -2,18 +2,9 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BuildinClient } from '../client/buildin-client.js';
 import { logger, generateCorrelationId } from '../utils/logger.js';
+import { FlexibleObjectSchema } from '../utils/schema-helpers.js';
 import type { ToolContext } from '../types/tools.js';
 import type { Database, PaginatedList, Page } from '../types/api.js';
-
-// Relaxed schemas to avoid MCP SDK serialization issues with strict unions
-const IconSchema = z.object({
-  emoji: z.string().optional(),
-  external: z.object({ url: z.string() }).optional(),
-}).passthrough();
-
-const CoverSchema = z.object({
-  external: z.object({ url: z.string() }).optional(),
-}).passthrough();
 
 export function registerDatabasesTools(server: McpServer, client: BuildinClient): void {
   // create_database
@@ -23,12 +14,12 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     {
       parent_page_id: z.string().describe('ID of the parent page where the database will be created'),
       title: z.string().min(1).max(100).describe('Database title'),
-      properties: z.record(z.string(), z.any()).describe(
+      properties: FlexibleObjectSchema.describe(
         'Database schema: map of property_key → { name, type, ... }. Must include at least one "title" type. Example: { "name": { "name": "Task", "type": "title" }, "status": { "name": "Status", "type": "select", "select": { "options": [{ "name": "Done", "color": "green" }] } } }',
       ),
-      icon: IconSchema.optional().describe('Database icon: { emoji: "📋" }'),
-      cover: CoverSchema.optional().describe('Database cover: { external: { url: "..." } }'),
-      is_inline: z.boolean().default(false).describe('Whether to create as an inline database'),
+      icon: FlexibleObjectSchema.optional().describe('Database icon: { emoji: "📋" }'),
+      cover: FlexibleObjectSchema.optional().describe('Database cover: { external: { url: "..." } }'),
+      is_inline: z.preprocess((v) => v === 'true' || v === true, z.boolean()).default(false).describe('Whether to create as an inline database'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -88,12 +79,10 @@ export function registerDatabasesTools(server: McpServer, client: BuildinClient)
     {
       database_id: z.string().describe('The ID of the database to update'),
       title: z.string().min(1).max(100).optional().describe('New database title'),
-      icon: IconSchema.nullable().optional().describe('New icon (null to remove)'),
-      cover: CoverSchema.nullable().optional().describe('New cover (null to remove)'),
-      properties: z.record(z.string(), z.any()).optional().describe(
-        'Properties to add/update. Set a property value to null to delete it.',
-      ),
-      archived: z.boolean().optional().describe('Archive or unarchive the database'),
+      icon: FlexibleObjectSchema.nullable().optional().describe('New icon (null to remove)'),
+      cover: FlexibleObjectSchema.nullable().optional().describe('New cover (null to remove)'),
+      properties: FlexibleObjectSchema.optional().describe('Properties to add/update. Set a property value to null to delete it.'),
+      archived: z.preprocess((v) => v === 'true' || v === true, z.boolean()).optional().describe('Archive or unarchive the database'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();

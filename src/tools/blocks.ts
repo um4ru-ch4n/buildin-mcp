@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BuildinClient } from '../client/buildin-client.js';
 import { logger, generateCorrelationId } from '../utils/logger.js';
+import { FlexibleObjectSchema, jsonOrObject } from '../utils/schema-helpers.js';
 import type { ToolContext } from '../types/tools.js';
 import type { Block, PaginatedList } from '../types/api.js';
 
@@ -15,10 +16,10 @@ const BlockTypeSchema = z.enum([
   'column', 'table', 'table_row', 'child_page', 'child_database',
 ]);
 
-// Relaxed block schema — using z.any() for data to avoid union/passthrough issues
+// Schema for a block to append — data is flexible
 const AppendBlockSchema = z.object({
   type: BlockTypeSchema.describe('Block type'),
-  data: z.record(z.string(), z.any()).describe('Block content data. Varies by type. Common fields: rich_text, text_color, background_color, checked, language, url, icon, expression.'),
+  data: z.record(z.string(), z.any()).describe('Block content data'),
 });
 
 export function registerBlocksTools(server: McpServer, client: BuildinClient): void {
@@ -94,7 +95,7 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
     'Append child blocks to a page or block. Maximum 100 blocks per request. Each block needs { type, data }. Supported types: paragraph, heading_1/2/3, bulleted_list_item, numbered_list_item, to_do, quote, toggle, code, callout, divider, image, bookmark, equation, table, column_list, etc.',
     {
       block_id: z.string().describe('Parent block or page ID'),
-      children: z.array(AppendBlockSchema).min(1).max(100).describe('Array of blocks to append (max 100)'),
+      children: jsonOrObject(z.array(AppendBlockSchema).min(1).max(100)).describe('Array of blocks to append (max 100)'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -129,8 +130,8 @@ export function registerBlocksTools(server: McpServer, client: BuildinClient): v
     {
       block_id: z.string().describe('The ID of the block to update'),
       type: BlockTypeSchema.optional().describe('New block type (changes the block type)'),
-      data: z.record(z.string(), z.any()).optional().describe('New block content data'),
-      archived: z.boolean().optional().describe('Archive or unarchive the block'),
+      data: FlexibleObjectSchema.optional().describe('New block content data'),
+      archived: z.preprocess((v) => v === 'true' || v === true, z.boolean()).optional().describe('Archive or unarchive the block'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();

@@ -2,23 +2,9 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BuildinClient } from '../client/buildin-client.js';
 import { logger, generateCorrelationId } from '../utils/logger.js';
+import { FlexibleObjectSchema } from '../utils/schema-helpers.js';
 import type { ToolContext } from '../types/tools.js';
 import type { Page } from '../types/api.js';
-
-// Relaxed schemas — passthrough to avoid MCP SDK serialization issues with strict unions
-const IconSchema = z.object({
-  emoji: z.string().optional(),
-  external: z.object({ url: z.string() }).optional(),
-}).passthrough();
-
-const CoverSchema = z.object({
-  external: z.object({ url: z.string() }).optional(),
-}).passthrough();
-
-const ParentSchema = z.object({
-  page_id: z.string().optional(),
-  database_id: z.string().optional(),
-}).passthrough();
 
 export function registerPagesTools(server: McpServer, client: BuildinClient): void {
   // create_page
@@ -26,11 +12,11 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
     'create_page',
     'Create a new page in Buildin.ai. Can be created as a child of another page or as a record in a database.',
     {
-      parent: ParentSchema.optional().describe('Parent: { page_id: "..." } or { database_id: "..." }. Omit for default location.'),
+      parent: FlexibleObjectSchema.optional().describe('Parent: { page_id: "..." } or { database_id: "..." }. Omit for default location.'),
       title: z.string().min(1).max(2000).describe('Page title'),
-      icon: IconSchema.optional().describe('Page icon: { emoji: "🧪" } or { external: { url: "..." } }'),
-      cover: CoverSchema.optional().describe('Page cover: { external: { url: "..." } }'),
-      properties: z.record(z.string(), z.any()).optional().describe('Additional page properties (for database records). E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
+      icon: FlexibleObjectSchema.optional().describe('Page icon: { emoji: "🧪" } or { external: { url: "..." } }'),
+      cover: FlexibleObjectSchema.optional().describe('Page cover: { external: { url: "..." } }'),
+      properties: FlexibleObjectSchema.optional().describe('Additional page properties (for database records). E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
@@ -94,10 +80,10 @@ export function registerPagesTools(server: McpServer, client: BuildinClient): vo
     {
       page_id: z.string().describe('The ID of the page to update'),
       title: z.string().min(1).max(2000).optional().describe('New page title'),
-      icon: IconSchema.nullable().optional().describe('New page icon (null to remove)'),
-      cover: CoverSchema.nullable().optional().describe('New page cover (null to remove)'),
-      archived: z.boolean().optional().describe('Archive or unarchive the page'),
-      properties: z.record(z.string(), z.any()).optional().describe('Properties to update. E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
+      icon: FlexibleObjectSchema.nullable().optional().describe('New page icon (null to remove)'),
+      cover: FlexibleObjectSchema.nullable().optional().describe('New page cover (null to remove)'),
+      archived: z.preprocess((v) => v === 'true' || v === true, z.boolean()).optional().describe('Archive or unarchive the page'),
+      properties: FlexibleObjectSchema.optional().describe('Properties to update. E.g. { "Status": { "type": "select", "select": { "name": "Done" } } }'),
     },
     async (input) => {
       const correlationId = generateCorrelationId();
