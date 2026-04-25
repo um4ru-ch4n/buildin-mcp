@@ -28,6 +28,10 @@ const ConfigSchema = z.object({
     default_page_size: z.number().int().positive(),
     max_page_size: z.number().int().positive(),
   }),
+  http: z.object({
+    port: z.number().int().positive(),
+    path: z.string(),
+  }),
   logging: z.object({
     default_level: z.enum(['debug', 'info', 'warn', 'error']),
   }),
@@ -35,7 +39,9 @@ const ConfigSchema = z.object({
 
 // Env schema
 const EnvSchema = z.object({
-  BUILDIN_BOT_TOKEN: z.string().min(1, 'BUILDIN_BOT_TOKEN is required'),
+  BUILDIN_BOT_TOKEN: z.string().min(1).optional(),
+  TRANSPORT_MODE: z.enum(['stdio', 'http']).optional().default('stdio'),
+  HTTP_PORT: z.coerce.number().int().positive().optional().default(3000),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional().default('production'),
 });

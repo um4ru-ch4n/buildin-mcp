@@ -4,9 +4,10 @@ services:
   buildin-mcp:
     build: .
     environment:
-      - BUILDIN_BOT_TOKEN=${BUILDIN_BOT_TOKEN}
+      - TRANSPORT_MODE=http
+      - HTTP_PORT=3000
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - NODE_ENV=production
-    stdin_open: true
-    tty: true
+    ports:
+      - "${HTTP_PORT:-3000}:3000"
     restart: unless-stopped

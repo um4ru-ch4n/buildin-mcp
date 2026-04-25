@@ -9,12 +9,12 @@ vi.mock('../../src/config/index.js', () => ({
     logging: { default_level: 'info' },
     rate_limits: { read_per_minute: 1000, write_per_minute: 100, batch_per_minute: 10 },
     pagination: { default_page_size: 50, max_page_size: 100 },
-  }),
-  getEnv: () => ({
-    BUILDIN_BOT_TOKEN: 'test-token-123',
-    NODE_ENV: 'test',
+    http: { port: 3000, path: '/mcp' },
   }),
 }));
+
+// BuildinClient reads token from constructor arg or process.env
+vi.stubEnv('BUILDIN_BOT_TOKEN', 'test-token-123');
 
 const mockCtx = { correlationId: 'test', toolName: 'test', callChain: ['test'] };
 

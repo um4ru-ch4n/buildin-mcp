@@ -1,4 +1,4 @@
-import { getConfig, getEnv } from '../config/index.js';
+import { getConfig } from '../config/index.js';
 import { BuildinApiError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import { withRetry } from '../utils/retry.js';
@@ -10,11 +10,10 @@ export class BuildinClient {
   private readonly token: string;
   private readonly timeoutMs: number;
 
-  constructor() {
+  constructor(token?: string) {
     const config = getConfig();
-    const env = getEnv();
     this.baseUrl = config.api.base_url;
-    this.token = env.BUILDIN_BOT_TOKEN;
+    this.token = token ?? process.env['BUILDIN_BOT_TOKEN'] ?? '';
     this.timeoutMs = config.api.timeout_ms;
   }
 

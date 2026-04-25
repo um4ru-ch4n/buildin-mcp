@@ -37,11 +37,18 @@ src/
 
 ## Configuration
 
-**`config.yaml`** — non-secret constants: timeouts, retry policy, rate limits, pagination defaults.
-**`.env`** — credentials only (never commit this file):
-- `BUILDIN_BOT_TOKEN` — your Buildin.ai bot token (required)
+**`config.yaml`** — non-secret constants: timeouts, retry policy, rate limits, pagination, HTTP server defaults.
+**`.env`** — runtime settings (never commit this file):
+- `TRANSPORT_MODE` — `stdio` (local, single-user) or `http` (remote, multi-tenant). Default: `stdio`
+- `BUILDIN_BOT_TOKEN` — your Buildin.ai bot token (required for stdio mode; for http mode, token comes from client URL)
+- `HTTP_PORT` — port for HTTP server (default: 3000)
 - `LOG_LEVEL` — log level: debug | info | warn | error (default: info)
 - `NODE_ENV` — development | production (affects log format)
+
+### Transport Modes
+
+**stdio** — local single-user mode. Token from env. Used with Claude Desktop `command` config.
+**http** — remote multi-tenant mode. Each user passes their own token via URL query param. No tokens stored on server.
 
 ## Commands
 
@@ -61,11 +68,11 @@ docker build -t buildin-mcp .
 docker-compose up
 ```
 
-The server communicates via **stdio** — Claude Desktop or other MCP clients pipe stdin/stdout.
+Docker compose runs in **http** mode by default (multi-tenant, port 3000).
 
-## Claude Desktop Integration
+## Claude Integration
 
-Add to `claude_desktop_config.json`:
+### Option 1: Local stdio mode
 ```json
 {
   "mcpServers": {
@@ -80,7 +87,19 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-Or with Docker:
+### Option 2: Remote HTTP mode (multi-tenant)
+```json
+{
+  "mcpServers": {
+    "buildin": {
+      "type": "http",
+      "url": "https://your-server.com/mcp?token=YOUR_BUILDIN_BOT_TOKEN"
+    }
+  }
+}
+```
+
+### Option 3: Docker stdio
 ```json
 {
   "mcpServers": {
